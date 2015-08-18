@@ -12,8 +12,6 @@ import android.util.Log;
 public class Decoder implements Camera.PreviewCallback {
 	public static final String TAG = Decoder.class.getSimpleName();
 	private static final Long DECODE_INTERVAL = 500l;
-	static final double BOUNDS_FRACTION = 0.6;
-	static final double VERTICAL_HEIGHT_FRACTION = 0.3;
 	private Activity mActivity;
 
 	private OnDecodedCallback mCallback;

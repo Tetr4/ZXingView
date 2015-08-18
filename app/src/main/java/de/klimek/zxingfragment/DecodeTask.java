@@ -87,10 +87,10 @@ class DecodeTask extends AsyncTask<byte[], Void, Result> {
 
 	private static Rect getBoundingRect(Camera.Size previewSize,
 			int cameraDisplayOrientation) {
-		double heightFraction = Decoder.BOUNDS_FRACTION;
-		double widthFraction = Decoder.BOUNDS_FRACTION;
+		double heightFraction = ZxingFragment.RETICLE_FRACTION;
+		double widthFraction = ZxingFragment.RETICLE_FRACTION;
 		if (cameraDisplayOrientation == 90 || cameraDisplayOrientation == 270) {
-			widthFraction = Decoder.VERTICAL_HEIGHT_FRACTION;
+			widthFraction = ZxingFragment.RETICLE_HEIGHT_FRACTION_PORTRAIT;
 		}
 		int height = (int) (previewSize.height * heightFraction);
 		int width = (int) (previewSize.width * widthFraction);

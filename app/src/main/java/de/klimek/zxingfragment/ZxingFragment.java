@@ -21,6 +21,12 @@ public class ZxingFragment extends Fragment {
 
 	private static final boolean USE_FLASH = true;
 
+    // height and width of the reticle as fraction of the camera preview frame
+	static final double RETICLE_FRACTION = .8;
+
+    // height of the reticle in portrait mode
+	static final double RETICLE_HEIGHT_FRACTION_PORTRAIT = 0.4;
+
 	private ScannerView mScannerView;
 	private Reticle mReticle;
 
@@ -169,7 +175,7 @@ public class ZxingFragment extends Fragment {
 		} else { // back-facing
 			result = (cameraInfo.orientation - degrees + 360) % 360;
 		}
-		
+
 		return result;
 	}
 
