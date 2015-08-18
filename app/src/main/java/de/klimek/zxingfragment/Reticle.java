@@ -16,6 +16,7 @@ public class Reticle extends View {
         super(context, attrs);
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPaint.setStrokeWidth(5);
+        mPaint.setARGB(100, 0x9F, 0xCD, 0x46); // TODO Resource
     }
 
     public void drawTargetRect(Canvas canvas) {
@@ -39,7 +40,6 @@ public class Reticle extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-		mPaint.setARGB(100, 0x9F, 0xCD, 0x46); // TODO Resource
         drawTargetRect(canvas);
     }
 
