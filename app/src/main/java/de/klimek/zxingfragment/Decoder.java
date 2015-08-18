@@ -54,7 +54,7 @@ public class Decoder implements Camera.PreviewCallback {
 	private static byte[] createPreviewBuffer(Camera camera) {
 		Parameters params = camera.getParameters();
 		int width = params.getPreviewSize().width;
-		int height = params.getPreviewSize().width;
+		int height = params.getPreviewSize().height;
 		int bitsPerPixel = ImageFormat.getBitsPerPixel(params
 				.getPreviewFormat());
 		int bytesPerPixel = (int) Math.ceil(bitsPerPixel / 8.0);
