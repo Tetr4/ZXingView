@@ -46,5 +46,4 @@ public class Reticle extends View {
     public void setDisplayOrientation(int displayOrientation) {
         mDisplayOrientation = displayOrientation;
     }
-
 }

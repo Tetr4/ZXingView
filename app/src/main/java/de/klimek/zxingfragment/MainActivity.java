@@ -8,15 +8,13 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.widget.Toast;
 
 import de.klimek.zxingfragment.Decoder.OnDecodedCallback;
 
 public class MainActivity extends Activity implements OnDecodedCallback {
-
-    private ZxingFragment mZxingFragment;
     private static final int CAMERA_PERMISSION_REQUEST = 0xabc;
+    private ZxingFragment mZxingFragment;
     private boolean mPermissionGranted;
 
     @Override
@@ -29,16 +27,21 @@ public class MainActivity extends Activity implements OnDecodedCallback {
         mZxingFragment.setOnDecodedCallback(this);
 
         // get permission
-        mPermissionGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
+        int cameraPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
+        mPermissionGranted = cameraPermission == PackageManager.PERMISSION_GRANTED;
         if (!mPermissionGranted) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_REQUEST);
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CAMERA},
+                    CAMERA_PERMISSION_REQUEST);
         }
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == CAMERA_PERMISSION_REQUEST) {
-            mPermissionGranted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        if (requestCode == CAMERA_PERMISSION_REQUEST && grantResults.length > 0) {
+            mPermissionGranted = grantResults[0] == PackageManager.PERMISSION_GRANTED;
         }
     }
 
@@ -60,5 +63,4 @@ public class MainActivity extends Activity implements OnDecodedCallback {
     public void onDecoded(String decodedData) {
         Toast.makeText(this, decodedData, Toast.LENGTH_SHORT).show();
     }
-
 }
