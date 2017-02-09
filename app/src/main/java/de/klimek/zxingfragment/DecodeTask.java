@@ -15,36 +15,31 @@ class DecodeTask extends AsyncTask<byte[], Void, Result> {
     private Decoder mDecoder;
     private Camera mCamera;
     private int mCameraDisplayOrientation = 0;
+    private double mReticleFraction;
     private MultiFormatReader mMultiFormatReader = new MultiFormatReader();
 
     public DecodeTask(Decoder decoder, Camera camera,
-                      int cameraDisplayOrientation) {
+                      int cameraDisplayOrientation, double reticleFraction) {
         mDecoder = decoder;
         mCamera = camera;
         mCameraDisplayOrientation = cameraDisplayOrientation;
+        mReticleFraction = reticleFraction;
     }
 
-    private static Result getResult(byte[] data, Camera camera,
-                                    int cameraDisplayOrientation, MultiFormatReader reader) {
-        Camera.Size previewSize = camera.getParameters().getPreviewSize();
+    private static Rect getReticleRect(Camera.Size previewSize, double reticleFraction) {
+        int height = (int) (previewSize.height * reticleFraction);
+        int width = (int) (previewSize.width * reticleFraction);
+        int smallestDim = Math.min(height, width);
 
-        Rect boundingRect = getBoundingRect(previewSize,
-                cameraDisplayOrientation);
-        PlanarYUVLuminanceSource source = buildLuminanceSource(data,
-                previewSize, boundingRect, cameraDisplayOrientation);
-        BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
+        int left = (previewSize.width - smallestDim) / 2;
+        int top = (previewSize.height - smallestDim) / 2;
+        int right = left + smallestDim;
+        int bottom = top + smallestDim;
 
-        try {
-            return reader.decodeWithState(bitmap);
-        } catch (NotFoundException e) {
-            return null;
-        } finally {
-            reader.reset();
-        }
+        return new Rect(left, top, right, bottom);
     }
 
     private static PlanarYUVLuminanceSource buildLuminanceSource(byte[] data, Camera.Size previewSize, Rect boundingRect, int cameraDisplayOrientation) {
-
         switch (cameraDisplayOrientation) {
             case 0:
                 // data = flip(data);
@@ -52,9 +47,11 @@ class DecodeTask extends AsyncTask<byte[], Void, Result> {
 
             case 90:
                 rotate90(data, previewSize.width, previewSize.height);
-                return new PlanarYUVLuminanceSource(data, previewSize.height,
-                        previewSize.width, boundingRect.top, boundingRect.left,
-                        boundingRect.height(), boundingRect.width(), false);
+                return new PlanarYUVLuminanceSource(data,
+                        previewSize.height, previewSize.width,
+                        boundingRect.top, boundingRect.left,
+                        boundingRect.height(), boundingRect.width(),
+                        false);
             case 180:
                 break;
 
@@ -63,25 +60,11 @@ class DecodeTask extends AsyncTask<byte[], Void, Result> {
                 break;
         }
 
-        return new PlanarYUVLuminanceSource(data, previewSize.width,
-                previewSize.height, boundingRect.left, boundingRect.top,
-                boundingRect.width(), boundingRect.height(), false);
-    }
-
-    private static Rect getBoundingRect(Camera.Size previewSize,
-                                        int cameraDisplayOrientation) {
-        double heightFraction = ZxingFragment.RETICLE_FRACTION;
-        double widthFraction = ZxingFragment.RETICLE_FRACTION;
-        if (cameraDisplayOrientation == 90 || cameraDisplayOrientation == 270) {
-            widthFraction = ZxingFragment.RETICLE_HEIGHT_FRACTION_PORTRAIT;
-        }
-        int height = (int) (previewSize.height * heightFraction);
-        int width = (int) (previewSize.width * widthFraction);
-        int left = (int) (previewSize.width * ((1 - widthFraction) / 2));
-        int top = (int) (previewSize.height * ((1 - heightFraction) / 2));
-        int right = left + width;
-        int bottom = top + height;
-        return new Rect(left, top, right, bottom);
+        return new PlanarYUVLuminanceSource(data,
+                previewSize.width, previewSize.height,
+                boundingRect.left, boundingRect.top,
+                boundingRect.width(), boundingRect.height(),
+                false);
     }
 
     private static void rotate90(byte[] data, int width, int height) {
@@ -105,8 +88,20 @@ class DecodeTask extends AsyncTask<byte[], Void, Result> {
 
     @Override
     protected Result doInBackground(byte[]... datas) {
-        return getResult(datas[0], mCamera, mCameraDisplayOrientation,
-                mMultiFormatReader);
+        byte[] data = datas[0];
+        Camera.Size previewSize = mCamera.getParameters().getPreviewSize();
+
+        Rect boundingRect = getReticleRect(previewSize, mReticleFraction);
+        PlanarYUVLuminanceSource source = buildLuminanceSource(data, previewSize, boundingRect, mCameraDisplayOrientation);
+        BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
+
+        try {
+            return mMultiFormatReader.decodeWithState(bitmap);
+        } catch (NotFoundException e) {
+            return null;
+        } finally {
+            mMultiFormatReader.reset();
+        }
     }
 
     @Override
@@ -117,4 +112,6 @@ class DecodeTask extends AsyncTask<byte[], Void, Result> {
             mDecoder.onDecodeFail();
         }
     }
+
+
 }

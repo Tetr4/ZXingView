@@ -19,12 +19,12 @@ import java.util.List;
 import de.klimek.zxingfragment.Decoder.OnDecodedCallback;
 
 public class ZxingFragment extends Fragment {
-    // height and width of the reticle as fraction of the camera preview frame
-    static final double RETICLE_FRACTION = .8;
-    // height of the reticle in portrait mode
-    static final double RETICLE_HEIGHT_FRACTION_PORTRAIT = 0.4;
     private static final String TAG = ZxingFragment.class.getSimpleName();
+
+    // width and height of the reticle as fraction of the camera preview frame
+    private static final double RETICLE_FRACTION = .8;
     private static final boolean USE_FLASH = true;
+
     private ScannerView mScannerView;
     private Reticle mReticle;
 
@@ -106,6 +106,7 @@ public class ZxingFragment extends Fragment {
 
         mScannerView = (ScannerView) rootView.findViewById(R.id.scanner_view);
         mReticle = (Reticle) rootView.findViewById(R.id.reticle);
+        mReticle.setSize(RETICLE_FRACTION);
 
         return rootView;
     }
@@ -125,11 +126,10 @@ public class ZxingFragment extends Fragment {
             int displayOrientation = getCameraDisplayOrientation(display,
                     mCameraInfo);
             mCamera.setDisplayOrientation(displayOrientation);
-            mReticle.setDisplayOrientation(displayOrientation);
             mScannerView.stopPreview();
             mScannerView.startPreview(mCamera, displayOrientation);
             mDecoder.stopDecoding();
-            mDecoder.startDecoding(mCamera, displayOrientation);
+            mDecoder.startDecoding(mCamera, displayOrientation, RETICLE_FRACTION);
         }
     }
 
@@ -165,8 +165,7 @@ public class ZxingFragment extends Fragment {
                             display, mCameraInfo);
                     mCamera.setDisplayOrientation(displayOrientation);
                     mScannerView.startPreview(mCamera, displayOrientation);
-                    mDecoder.startDecoding(mCamera, displayOrientation);
-                    mReticle.setDisplayOrientation(displayOrientation);
+                    mDecoder.startDecoding(mCamera, displayOrientation, RETICLE_FRACTION);
                     mScannerView.setVisibility(View.VISIBLE);
                     mReticle.setVisibility(View.VISIBLE);
                 }

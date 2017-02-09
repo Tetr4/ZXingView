@@ -22,6 +22,7 @@ public class Decoder implements Camera.PreviewCallback {
     private Camera mCamera;
     private int mCameraDisplayOrientation;
     private byte[] mPreviewBuffer;
+    private double mReticleFraction;
 
     public Decoder(Activity activity) {
         mActivity = activity;
@@ -42,11 +43,12 @@ public class Decoder implements Camera.PreviewCallback {
         mCallback = callback;
     }
 
-    public void startDecoding(Camera camera, int cameraDisplayOrientation) {
+    public void startDecoding(Camera camera, int cameraDisplayOrientation, double reticleFraction) {
         mDecoding = true;
 
         mCamera = camera;
         mCameraDisplayOrientation = cameraDisplayOrientation;
+        mReticleFraction = reticleFraction;
 
         // add buffer to camera to prevent garbage collection spam
         mPreviewBuffer = createPreviewBuffer(camera);
@@ -59,7 +61,6 @@ public class Decoder implements Camera.PreviewCallback {
         if (mDecodeTask != null) {
             mDecodeTask.cancel(true);
         }
-
     }
 
     /*
@@ -71,7 +72,7 @@ public class Decoder implements Camera.PreviewCallback {
     @Override
     public void onPreviewFrame(byte[] data, Camera camera) {
         if (mDecoding) {
-            mDecodeTask = new DecodeTask(this, camera, mCameraDisplayOrientation);
+            mDecodeTask = new DecodeTask(this, camera, mCameraDisplayOrientation, mReticleFraction);
             mDecodeTask.execute(data);
         }
     }

@@ -10,7 +10,7 @@ import android.view.View;
 public class Reticle extends View {
     private Paint mPaint;
     private Rect mTargetRect = new Rect();
-    private int mDisplayOrientation;
+    private double mReticleFraction;
 
     public Reticle(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -19,19 +19,20 @@ public class Reticle extends View {
         mPaint.setARGB(100, 0x9F, 0xCD, 0x46); // TODO Resource
     }
 
-    public void drawTargetRect(Canvas canvas) {
-        double heightFraction = ZxingFragment.RETICLE_FRACTION;
-        double widthFraction = ZxingFragment.RETICLE_FRACTION;
-        if (mDisplayOrientation == 90 || mDisplayOrientation == 270) {
-            heightFraction = ZxingFragment.RETICLE_HEIGHT_FRACTION_PORTRAIT;
-        }
+    public void setSize(double reticleFraction) {
+        mReticleFraction = reticleFraction;
+    }
 
-        int height = (int) (canvas.getHeight() * heightFraction);
-        int width = (int) (canvas.getWidth() * widthFraction);
-        int left = (int) (canvas.getWidth() * ((1 - widthFraction) / 2));
-        int top = (int) (canvas.getHeight() * ((1 - heightFraction) / 2));
-        int right = left + width;
-        int bottom = top + height;
+    public void drawTargetRect(Canvas canvas) {
+        int height = (int) (canvas.getHeight() * mReticleFraction);
+        int width = (int) (canvas.getWidth() * mReticleFraction);
+        int smallestDim = Math.min(height, width);
+
+        int left = (canvas.getWidth() - smallestDim) / 2;
+        int top = (canvas.getHeight() - smallestDim) / 2;
+        int right = left + smallestDim;
+        int bottom = top + smallestDim;
+
         mTargetRect.set(left, top, right, bottom);
 
         canvas.drawRect(mTargetRect, mPaint);
@@ -41,9 +42,5 @@ public class Reticle extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         drawTargetRect(canvas);
-    }
-
-    public void setDisplayOrientation(int displayOrientation) {
-        mDisplayOrientation = displayOrientation;
     }
 }
