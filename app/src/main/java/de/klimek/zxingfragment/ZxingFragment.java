@@ -87,7 +87,7 @@ public class ZxingFragment extends Fragment {
 
 	public void setOnDecodedCallback(OnDecodedCallback callback) {
 		mDecoder.setOnDecodedCallback(callback);
-        }
+    }
 
 	public void startScanning() {
         // Task for smooth UI interaction while camera loads
@@ -109,6 +109,7 @@ public class ZxingFragment extends Fragment {
             protected void onPostExecute(Exception e) {
                 if (e != null) {
                     Log.w(TAG, "Exception while opening camera", e);
+                    mCamera = null;
                 } else {
                     Display display = getActivity().getWindowManager()
                             .getDefaultDisplay();
@@ -122,9 +123,7 @@ public class ZxingFragment extends Fragment {
                     mReticle.setVisibility(View.VISIBLE);
                 }
             }
-        };
-
-        mStartCameraTask.execute();
+        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
 	public void stopScanning() {
