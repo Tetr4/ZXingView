@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import java.util.Timer;
@@ -73,7 +74,7 @@ public class Decoder implements Camera.PreviewCallback {
     public void onPreviewFrame(byte[] data, Camera camera) {
         if (mDecoding) {
             mDecodeTask = new DecodeTask(this, camera, mCameraDisplayOrientation, mReticleFraction);
-            mDecodeTask.execute(data);
+            mDecodeTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, data);
         }
     }
 
