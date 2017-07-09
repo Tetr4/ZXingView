@@ -1,4 +1,4 @@
-package de.klimek.zxingfragment;
+package de.klimek.scanner.sample;
 
 import android.Manifest;
 import android.app.Activity;
@@ -10,9 +10,11 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.widget.Toast;
 
-import de.klimek.zxingfragment.Decoder.OnDecodedCallback;
+import de.klimek.scanner.Decoder;
+import de.klimek.scanner.ZxingFragment;
+import de.klimek.zxingfragment.R;
 
-public class MainActivity extends Activity implements OnDecodedCallback {
+public class MainActivity extends Activity implements Decoder.OnDecodedCallback {
     private static final int CAMERA_PERMISSION_REQUEST = 0xabc;
     private ZxingFragment mZxingFragment;
     private boolean mPermissionGranted;
@@ -37,9 +39,7 @@ public class MainActivity extends Activity implements OnDecodedCallback {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == CAMERA_PERMISSION_REQUEST && grantResults.length > 0) {
             mPermissionGranted = grantResults[0] == PackageManager.PERMISSION_GRANTED;
         }

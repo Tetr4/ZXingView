@@ -3,12 +3,12 @@
     android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="de.klimek.zxingfragment.MainActivity"
+    tools:context="de.klimek.scanner.sample.MainActivity"
     tools:ignore="MergeRootFrame" >
 
     <fragment
         android:id="@+id/zxing_fragment"
-        android:name="de.klimek.zxingfragment.ZxingFragment"
+        android:name="de.klimek.scanner.ZxingFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_margin="32dp" />

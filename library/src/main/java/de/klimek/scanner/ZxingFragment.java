@@ -1,4 +1,4 @@
-package de.klimek.zxingfragment;
+package de.klimek.scanner;
 
 import android.app.Fragment;
 import android.content.res.Configuration;
@@ -15,8 +15,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import java.util.List;
-
-import de.klimek.zxingfragment.Decoder.OnDecodedCallback;
 
 public class ZxingFragment extends Fragment {
     private static final String TAG = ZxingFragment.class.getSimpleName();
@@ -119,12 +117,11 @@ public class ZxingFragment extends Fragment {
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
         // called when display is rotated
         if (mCamera != null) {
-            Display display = getActivity().getWindowManager()
-                    .getDefaultDisplay();
-            int displayOrientation = getCameraDisplayOrientation(display,
-                    mCameraInfo);
+            Display display = getActivity().getWindowManager().getDefaultDisplay();
+            int displayOrientation = getCameraDisplayOrientation(display, mCameraInfo);
             mCamera.setDisplayOrientation(displayOrientation);
             mScannerView.stopPreview();
             mScannerView.startPreview(mCamera, displayOrientation);
@@ -133,7 +130,7 @@ public class ZxingFragment extends Fragment {
         }
     }
 
-    public void setOnDecodedCallback(OnDecodedCallback callback) {
+    public void setOnDecodedCallback(Decoder.OnDecodedCallback callback) {
         mDecoder.setOnDecodedCallback(callback);
     }
 

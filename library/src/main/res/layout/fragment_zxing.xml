@@ -4,14 +4,14 @@
     android:layout_height="match_parent"
     android:background="@android:color/background_dark" >
 
-    <de.klimek.zxingfragment.ScannerView
+    <de.klimek.scanner.ScannerView
         android:id="@+id/scanner_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"
         android:visibility="invisible" />
 
-    <de.klimek.zxingfragment.Reticle
+    <de.klimek.scanner.Reticle
         android:id="@+id/reticle"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

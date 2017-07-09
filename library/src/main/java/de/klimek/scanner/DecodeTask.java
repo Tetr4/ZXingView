@@ -1,4 +1,4 @@
-package de.klimek.zxingfragment;
+package de.klimek.scanner;
 
 import android.graphics.Rect;
 import android.hardware.Camera;

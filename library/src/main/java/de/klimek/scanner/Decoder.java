@@ -1,4 +1,4 @@
-package de.klimek.zxingfragment;
+package de.klimek.scanner;
 
 import android.app.Activity;
 import android.graphics.ImageFormat;
