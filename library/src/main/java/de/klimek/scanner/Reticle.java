@@ -7,10 +7,13 @@ import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.View;
 
-public class Reticle extends View {
+/**
+ * Reticle that is used as view finder over the {@link CameraPreview}
+ */
+class Reticle extends View {
     private Paint mPaint;
     private Rect mTargetRect = new Rect();
-    private double mReticleFraction;
+    private double mReticleFraction = 1.0;
 
     public Reticle(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -23,7 +26,7 @@ public class Reticle extends View {
         mReticleFraction = reticleFraction;
     }
 
-    public void drawTargetRect(Canvas canvas) {
+    void drawTargetRect(Canvas canvas) {
         int height = (int) (canvas.getHeight() * mReticleFraction);
         int width = (int) (canvas.getWidth() * mReticleFraction);
         int smallestDim = Math.min(height, width);
@@ -34,7 +37,6 @@ public class Reticle extends View {
         int bottom = top + smallestDim;
 
         mTargetRect.set(left, top, right, bottom);
-
         canvas.drawRect(mTargetRect, mPaint);
     }
 

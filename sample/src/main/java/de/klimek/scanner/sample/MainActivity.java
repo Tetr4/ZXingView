@@ -10,13 +10,13 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.widget.Toast;
 
-import de.klimek.scanner.Decoder;
-import de.klimek.scanner.ZxingFragment;
+import de.klimek.scanner.OnDecodedCallback;
+import de.klimek.scanner.ScannerView;
 import de.klimek.zxingfragment.R;
 
-public class MainActivity extends Activity implements Decoder.OnDecodedCallback {
+public class MainActivity extends Activity implements OnDecodedCallback {
     private static final int CAMERA_PERMISSION_REQUEST = 0xabc;
-    private ZxingFragment mZxingFragment;
+    private ScannerView mScanner;
     private boolean mPermissionGranted;
 
     @Override
@@ -25,8 +25,8 @@ public class MainActivity extends Activity implements Decoder.OnDecodedCallback 
         setContentView(R.layout.activity_main);
 
         FragmentManager fragmentManager = getFragmentManager();
-        mZxingFragment = (ZxingFragment) fragmentManager.findFragmentById(R.id.zxing_fragment);
-        mZxingFragment.setOnDecodedCallback(this);
+        mScanner = (ScannerView) findViewById(R.id.scanner);
+        mScanner.setOnDecodedCallback(this);
 
         // get permission
         int cameraPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
@@ -49,14 +49,14 @@ public class MainActivity extends Activity implements Decoder.OnDecodedCallback 
     protected void onResume() {
         super.onResume();
         if (mPermissionGranted) {
-            mZxingFragment.startScanning();
+            mScanner.startScanning();
         }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        mZxingFragment.stopScanning();
+        mScanner.stopScanning();
     }
 
     @Override

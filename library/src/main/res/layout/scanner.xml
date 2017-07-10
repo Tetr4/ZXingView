@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@android:color/background_dark" >
+    android:layout_height="match_parent">
 
-    <de.klimek.scanner.ScannerView
-        android:id="@+id/scanner_view"
+    <de.klimek.scanner.CameraPreview
+        android:id="@+id/camera_preview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"
@@ -15,7 +14,6 @@
         android:id="@+id/reticle"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_gravity="center"
         android:visibility="invisible" />
 
-</FrameLayout>
+</merge>

@@ -4,11 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="de.klimek.scanner.sample.MainActivity"
-    tools:ignore="MergeRootFrame" >
+    tools:ignore="MergeRootFrame">
 
-    <fragment
-        android:id="@+id/zxing_fragment"
-        android:name="de.klimek.scanner.ZxingFragment"
+    <de.klimek.scanner.ScannerView
+        android:id="@+id/scanner"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_margin="32dp" />

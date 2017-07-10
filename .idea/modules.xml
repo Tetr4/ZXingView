@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/BarcodeScanner.iml" filepath="$PROJECT_DIR$/BarcodeScanner.iml" />
       <module fileurl="file://$PROJECT_DIR$/ZXingFragment.iml" filepath="$PROJECT_DIR$/ZXingFragment.iml" />
       <module fileurl="file://$PROJECT_DIR$/ZXingView.iml" filepath="$PROJECT_DIR$/ZXingView.iml" />
       <module fileurl="file://$PROJECT_DIR$/library/library.iml" filepath="$PROJECT_DIR$/library/library.iml" />
