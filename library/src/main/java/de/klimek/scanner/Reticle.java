@@ -11,19 +11,21 @@ import android.view.View;
  * Reticle that is used as view finder over the {@link CameraPreview}
  */
 class Reticle extends View {
-    private Paint mPaint;
+    private Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Rect mTargetRect = new Rect();
     private double mReticleFraction = 1.0;
 
     public Reticle(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mPaint.setStrokeWidth(5);
-        mPaint.setARGB(100, 0x9F, 0xCD, 0x46); // TODO Resource
     }
 
-    public void setSize(double reticleFraction) {
+    void setSize(double reticleFraction) {
         mReticleFraction = reticleFraction;
+    }
+
+    void setColor(int color) {
+        mPaint.setColor(color);
+        mPaint.setAlpha(100);
     }
 
     void drawTargetRect(Canvas canvas) {

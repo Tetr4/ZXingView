@@ -25,6 +25,28 @@ class DecodeTask extends AsyncTask<byte[], Void, Result> {
         mBoundingRect = boundingRect;
     }
 
+    @Override
+    protected Result doInBackground(byte[]... datas) {
+        PlanarYUVLuminanceSource source = buildLuminanceSource(datas[0], mPreviewSize, mBoundingRect, mCameraDisplayOrientation);
+        BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
+        try {
+            return mMultiFormatReader.decodeWithState(bitmap);
+        } catch (NotFoundException e) {
+            return null;
+        } finally {
+            mMultiFormatReader.reset();
+        }
+    }
+
+    @Override
+    protected void onPostExecute(Result result) {
+        if (result != null) {
+            mDecoder.onDecodeSuccess(result.toString());
+        } else {
+            mDecoder.onDecodeFail();
+        }
+    }
+
     private static PlanarYUVLuminanceSource buildLuminanceSource(byte[] data, Camera.Size previewSize, Rect boundingRect, int cameraDisplayOrientation) {
         byte[] rotatedData = rotate(data, previewSize.width, previewSize.height, cameraDisplayOrientation);
         boolean swap = (cameraDisplayOrientation == 90 || cameraDisplayOrientation == 270);
@@ -74,27 +96,5 @@ class DecodeTask extends AsyncTask<byte[], Void, Result> {
             }
         }
         return rotated;
-    }
-
-    @Override
-    protected Result doInBackground(byte[]... datas) {
-        PlanarYUVLuminanceSource source = buildLuminanceSource(datas[0], mPreviewSize, mBoundingRect, mCameraDisplayOrientation);
-        BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
-        try {
-            return mMultiFormatReader.decodeWithState(bitmap);
-        } catch (NotFoundException e) {
-            return null;
-        } finally {
-            mMultiFormatReader.reset();
-        }
-    }
-
-    @Override
-    protected void onPostExecute(Result result) {
-        if (result != null) {
-            mDecoder.onDecodeSuccess(result.toString());
-        } else {
-            mDecoder.onDecodeFail();
-        }
     }
 }

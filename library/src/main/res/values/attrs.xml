@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="ScannerView">
+        <!-- Size of the viewfinder reticle as a fraction of the camera preview -->
+        <attr name="reticle_fraction" format="float" />
+        <!-- Color of the viewfinder reticle -->
+        <attr name="reticle_color" format="reference" />
+        <!-- Activate camera flash when scanning -->
+        <attr name="use_flash" format="boolean" />
+        <!-- Use frontcamera if the backcamera can't focus close enough -->
+        <attr name="allow_frontcamera" format="boolean" />
+        <!-- Time in milliseconds between scans -->
+        <attr name="decode_interval" format="integer" />
+    </declare-styleable>
+</resources>

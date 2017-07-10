@@ -3,6 +3,8 @@ package de.klimek.scanner;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.hardware.Camera;
 import android.os.AsyncTask;
 import android.util.AttributeSet;
@@ -17,13 +19,23 @@ import java.util.List;
 
 /**
  * Wraps a {@link CameraPreview} and {@link Reticle} and handles scanning.
+ * <p>
+ * See {@link R.styleable#ScannerView ScannerView Attributes}
  */
 public class ScannerView extends FrameLayout {
-    // TODO as XML attributes
-    // width and height of the reticle as fraction of the camera preview frame
-    public static final double RETICLE_FRACTION = .6;
-    public static final boolean USE_FLASH = true;
     private static final String TAG = ScannerView.class.getSimpleName();
+
+    // Size of the viewfinder reticle as a fraction of the camera preview
+    private float mReticleFraction = .7f;
+    // Color of the viewfinder reticle
+    private int mReticleColor = Color.GREEN;
+    // Activate camera flash when scanning
+    private boolean mUseFlash = true;
+    // Use frontcamera if the backcamera can't focus close enough
+    private boolean mAllowFrontCamera = true;
+    // Time in milliseconds between scans
+    private int mDecodeInterval = 500; // ms
+
     private CameraPreview mCameraPreview;
     private Reticle mReticle;
 
@@ -44,19 +56,61 @@ public class ScannerView extends FrameLayout {
 
     public ScannerView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+        loadAttributes(attrs);
 
         inflate(getContext(), R.layout.scanner, this);
         mCameraPreview = (CameraPreview) findViewById(R.id.camera_preview);
         mReticle = (Reticle) findViewById(R.id.reticle);
-        mReticle.setSize(RETICLE_FRACTION);
+        mReticle.setSize(mReticleFraction);
+        mReticle.setColor(mReticleColor);
 
-        mCameraId = selectCamera();
+        mCameraId = selectCamera(mAllowFrontCamera);
         Camera.getCameraInfo(mCameraId, mCameraInfo);
 
-        mDecoder = new Decoder();
+        mDecoder = new Decoder(mDecodeInterval, mReticleFraction);
     }
 
-    private static void optimizeCameraParams(Camera camera) {
+    private void loadAttributes(AttributeSet attrSet) {
+        TypedArray attrs = getContext().obtainStyledAttributes(attrSet, R.styleable.ScannerView);
+        try {
+            mReticleFraction = attrs.getFloat(R.styleable.ScannerView_reticle_fraction, mReticleFraction);
+            mUseFlash = attrs.getBoolean(R.styleable.ScannerView_use_flash, mUseFlash);
+            mAllowFrontCamera = attrs.getBoolean(R.styleable.ScannerView_allow_frontcamera, mAllowFrontCamera);
+            mDecodeInterval = attrs.getInt(R.styleable.ScannerView_decode_interval, mDecodeInterval);
+            mReticleColor = attrs.getColor(R.styleable.ScannerView_reticle_color, mReticleColor);
+        } finally {
+            attrs.recycle();
+        }
+    }
+
+    private int selectCamera(boolean allowFrontCamera) {
+        if (allowFrontCamera) {
+            /*
+             * Barcodes will be blurry and thus unreadably on the back camera,
+             * should the device not support autofocus (e.g. Samsung Galaxy Tab 2
+             * 7.0). In that case we use the front camera which usually has a closer
+             * focus.
+             */
+            Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+            PackageManager packageManager = getContext().getPackageManager();
+            boolean hasAutoFocus = packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_AUTOFOCUS);
+            boolean hasFrontCamera = packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_FRONT);
+            if (!hasAutoFocus && hasFrontCamera) {
+                // use front camera
+                for (int curCameraId = 0; curCameraId < Camera.getNumberOfCameras(); curCameraId++) {
+                    Camera.getCameraInfo(curCameraId, cameraInfo);
+                    if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                        return curCameraId;
+                    }
+                }
+            }
+        }
+
+        // use default camera;
+        return 0;
+    }
+
+    private static void optimizeCameraParams(Camera camera, boolean useFlash) {
         Camera.Parameters params = camera.getParameters();
 
         // focus mode
@@ -66,7 +120,7 @@ public class ScannerView extends FrameLayout {
         }
 
         // flash mode
-        if (USE_FLASH) {
+        if (useFlash) {
             List<String> flashModes = params.getSupportedFlashModes();
             if (flashModes != null && flashModes.contains(Camera.Parameters.FLASH_MODE_TORCH)) {
                 params.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
@@ -105,32 +159,6 @@ public class ScannerView extends FrameLayout {
         return result;
     }
 
-    private int selectCamera() {
-        Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
-
-		/*
-         * Barcodes will be blurry and thus unreadably on the back camera,
-		 * should the device not support autofocus (e.g. Samsung Galaxy Tab 2
-		 * 7.0). In that case we use the front camera which usually has a closer
-		 * focus.
-		 */
-        PackageManager packageManager = getContext().getPackageManager();
-        boolean hasAutoFocus = packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_AUTOFOCUS);
-        boolean hasFrontCamera = packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_FRONT);
-        if (!hasAutoFocus && hasFrontCamera) {
-            // use front camera
-            for (int curCameraId = 0; curCameraId < Camera.getNumberOfCameras(); curCameraId++) {
-                Camera.getCameraInfo(curCameraId, cameraInfo);
-                if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-                    return curCameraId;
-                }
-            }
-        }
-
-        // use default camera;
-        return 0;
-    }
-
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         // called when display is rotated
@@ -145,7 +173,7 @@ public class ScannerView extends FrameLayout {
             mCameraPreview.stopPreview();
             mCameraPreview.startPreview(mCamera, displayOrientation);
             mDecoder.stopDecoding();
-            mDecoder.startDecoding(mCamera, displayOrientation, RETICLE_FRACTION);
+            mDecoder.startDecoding(mCamera, displayOrientation);
         }
     }
 
@@ -159,7 +187,7 @@ public class ScannerView extends FrameLayout {
                 } catch (RuntimeException e) {
                     return e;
                 }
-                optimizeCameraParams(mCamera);
+                optimizeCameraParams(mCamera, mUseFlash);
                 return null;
             }
 
@@ -177,7 +205,7 @@ public class ScannerView extends FrameLayout {
                 int displayOrientation = getCameraDisplayOrientation(display, mCameraInfo);
                 mCamera.setDisplayOrientation(displayOrientation);
                 mCameraPreview.startPreview(mCamera, displayOrientation);
-                mDecoder.startDecoding(mCamera, displayOrientation, RETICLE_FRACTION);
+                mDecoder.startDecoding(mCamera, displayOrientation);
                 mCameraPreview.setVisibility(View.VISIBLE);
                 mReticle.setVisibility(View.VISIBLE);
             }

@@ -12,38 +12,35 @@ import java.util.TimerTask;
 
 class Decoder implements Camera.PreviewCallback {
     private static final String TAG = Decoder.class.getSimpleName();
-    private static final Long DECODE_INTERVAL = 500L;
 
     private Camera mCamera;
     private int mCameraDisplayOrientation;
     private byte[] mPreviewBuffer;
+    private float mReticleFraction;
     private Rect mBoundingRect;
 
     private volatile boolean mDecoding = false;
+    private int mDecodeInterval;
     private Timer mDelayTimer = new Timer();
     private DecodeTask mDecodeTask;
     private OnDecodedCallback mCallback;
 
-    private static byte[] createPreviewBuffer(Camera camera) {
-        Parameters params = camera.getParameters();
-        int width = params.getPreviewSize().width;
-        int height = params.getPreviewSize().height;
-        int bitsPerPixel = ImageFormat.getBitsPerPixel(params.getPreviewFormat());
-        int sizeInBits = width * height * bitsPerPixel;
-        int sizeInBytes = (int) Math.ceil((float) sizeInBits / Byte.SIZE);
-        return new byte[sizeInBytes];
+
+    Decoder(int decodeInterval, float reticleFraction) {
+        mDecodeInterval = decodeInterval;
+        mReticleFraction = reticleFraction;
     }
 
     void setOnDecodedCallback(OnDecodedCallback callback) {
         mCallback = callback;
     }
 
-    void startDecoding(Camera camera, int cameraDisplayOrientation, double reticleFraction) {
+    void startDecoding(Camera camera, int cameraDisplayOrientation) {
         mDecoding = true;
 
         mCamera = camera;
         mCameraDisplayOrientation = cameraDisplayOrientation;
-        mBoundingRect = getBoundingRect(camera, reticleFraction);
+        mBoundingRect = getBoundingRect(camera, mReticleFraction);
 
         // add buffer to camera to prevent garbage collection spam
         mPreviewBuffer = createPreviewBuffer(camera);
@@ -72,6 +69,16 @@ class Decoder implements Camera.PreviewCallback {
         return new Rect(left, top, right, bottom);
     }
 
+    private static byte[] createPreviewBuffer(Camera camera) {
+        Parameters params = camera.getParameters();
+        int width = params.getPreviewSize().width;
+        int height = params.getPreviewSize().height;
+        int bitsPerPixel = ImageFormat.getBitsPerPixel(params.getPreviewFormat());
+        int sizeInBits = width * height * bitsPerPixel;
+        int sizeInBytes = (int) Math.ceil((float) sizeInBits / Byte.SIZE);
+        return new byte[sizeInBytes];
+    }
+
     /*
      * Called when the camera has a buffer, e.g. by calling
      * camera.addCallbackBuffer(buffer). This buffer is automatically removed,
@@ -95,7 +102,7 @@ class Decoder implements Camera.PreviewCallback {
         if (mDecoding) {
             mCallback.onDecoded(string);
             // request next frame after delay
-            mDelayTimer.schedule(new RequestPreviewFrameTask(), DECODE_INTERVAL);
+            mDelayTimer.schedule(new RequestPreviewFrameTask(), mDecodeInterval);
         }
     }
 
@@ -106,7 +113,7 @@ class Decoder implements Camera.PreviewCallback {
         // Log.i(Decoder.TAG, "Decode fail.");
         if (mDecoding) {
             // request next frame after delay
-            mDelayTimer.schedule(new RequestPreviewFrameTask(), DECODE_INTERVAL);
+            mDelayTimer.schedule(new RequestPreviewFrameTask(), mDecodeInterval);
         }
     }
 
