@@ -8,6 +8,9 @@
         android:name="android.hardware.camera.any"
         android:required="true" />
     <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false" />
+    <uses-feature
         android:name="android.hardware.camera.flash"
         android:required="false" />
 
@@ -16,6 +19,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
+        <!-- handle configChanges for faster rotation -->
         <activity
             android:name="de.klimek.scanner.sample.MainActivity"
             android:configChanges="orientation|screenSize"
