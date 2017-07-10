@@ -13,88 +13,73 @@ import com.google.zxing.common.HybridBinarizer;
 
 class DecodeTask extends AsyncTask<byte[], Void, Result> {
     private Decoder mDecoder;
-    private Camera mCamera;
-    private int mCameraDisplayOrientation = 0;
-    private double mReticleFraction;
+    private Camera.Size mPreviewSize;
+    private int mCameraDisplayOrientation;
+    private Rect mBoundingRect;
     private MultiFormatReader mMultiFormatReader = new MultiFormatReader();
 
-    public DecodeTask(Decoder decoder, Camera camera,
-                      int cameraDisplayOrientation, double reticleFraction) {
+    DecodeTask(Decoder decoder, Camera camera, int cameraDisplayOrientation, Rect boundingRect) {
         mDecoder = decoder;
-        mCamera = camera;
+        mPreviewSize = camera.getParameters().getPreviewSize();
         mCameraDisplayOrientation = cameraDisplayOrientation;
-        mReticleFraction = reticleFraction;
-    }
-
-    private static Rect getReticleRect(Camera.Size previewSize, double reticleFraction) {
-        int height = (int) (previewSize.height * reticleFraction);
-        int width = (int) (previewSize.width * reticleFraction);
-        int smallestDim = Math.min(height, width);
-
-        int left = (previewSize.width - smallestDim) / 2;
-        int top = (previewSize.height - smallestDim) / 2;
-        int right = left + smallestDim;
-        int bottom = top + smallestDim;
-
-        return new Rect(left, top, right, bottom);
+        mBoundingRect = boundingRect;
     }
 
     private static PlanarYUVLuminanceSource buildLuminanceSource(byte[] data, Camera.Size previewSize, Rect boundingRect, int cameraDisplayOrientation) {
-        switch (cameraDisplayOrientation) {
-            case 0:
-                // data = flip(data);
-                break;
-
-            case 90:
-                rotate90(data, previewSize.width, previewSize.height);
-                return new PlanarYUVLuminanceSource(data,
-                        previewSize.height, previewSize.width,
-                        boundingRect.top, boundingRect.left,
-                        boundingRect.height(), boundingRect.width(),
-                        false);
-            case 180:
-                break;
-
-            case 270:
-                rotate90(data, previewSize.width, previewSize.height);
-                break;
-        }
-
-        return new PlanarYUVLuminanceSource(data,
-                previewSize.width, previewSize.height,
-                boundingRect.left, boundingRect.top,
-                boundingRect.width(), boundingRect.height(),
+        byte[] rotatedData = rotate(data, previewSize.width, previewSize.height, cameraDisplayOrientation);
+        boolean swap = (cameraDisplayOrientation == 90 || cameraDisplayOrientation == 270);
+        return new PlanarYUVLuminanceSource(
+                rotatedData,
+                swap ? previewSize.height : previewSize.width,
+                swap ? previewSize.width : previewSize.height,
+                swap ? boundingRect.top : boundingRect.left,
+                swap ? boundingRect.left : boundingRect.top,
+                swap ? boundingRect.height() : boundingRect.width(),
+                swap ? boundingRect.width() : boundingRect.height(),
                 false);
     }
 
-    private static void rotate90(byte[] data, int width, int height) {
-        int length = height * width;
-        int lengthDec = length - 1;
-        int i = 0;
-        do {
-            int k = (i * height) % lengthDec;
-            while (k > i)
-                k = (height * k) % lengthDec;
-            if (k != i)
-                swap(data, k, i);
-        } while (++i <= (length - 2));
-    }
+    private static byte[] rotate(byte[] yuv, int width, int height, int rotation) {
+        if (rotation == 0) {
+            return yuv;
+        }
 
-    private static void swap(byte[] data, int k, int i) {
-        byte temp = data[k];
-        data[k] = data[i];
-        data[i] = temp;
+        boolean swap = (rotation == 90 || rotation == 270);
+        boolean flipX = (rotation == 90 || rotation == 180);
+        boolean flipY = (rotation == 180 || rotation == 270);
+
+        // rotate image in NV21 encoding, which is the default for camera preview format
+        byte[] rotated = new byte[yuv.length];
+        int size = width * height;
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                int yIn = y * width + x;
+                int uIn = size + (y >> 1) * width + (x & ~1);
+                int vIn = uIn + 1;
+
+                int wSwapped = swap ? height : width;
+                int hSwapped = swap ? width : height;
+                int xSwapped = swap ? y : x;
+                int ySwapped = swap ? x : y;
+                int xFlipped = flipX ? wSwapped - xSwapped - 1 : xSwapped;
+                int yFlipped = flipY ? hSwapped - ySwapped - 1 : ySwapped;
+
+                int yOut = yFlipped * wSwapped + xFlipped;
+                int uOut = size + (yFlipped >> 1) * wSwapped + (xFlipped & ~1);
+                int vOut = uOut + 1;
+
+                rotated[yOut] = (byte) (0xff & yuv[yIn]);
+                rotated[uOut] = (byte) (0xff & yuv[uIn]);
+                rotated[vOut] = (byte) (0xff & yuv[vIn]);
+            }
+        }
+        return rotated;
     }
 
     @Override
     protected Result doInBackground(byte[]... datas) {
-        byte[] data = datas[0];
-        Camera.Size previewSize = mCamera.getParameters().getPreviewSize();
-
-        Rect boundingRect = getReticleRect(previewSize, mReticleFraction);
-        PlanarYUVLuminanceSource source = buildLuminanceSource(data, previewSize, boundingRect, mCameraDisplayOrientation);
+        PlanarYUVLuminanceSource source = buildLuminanceSource(datas[0], mPreviewSize, mBoundingRect, mCameraDisplayOrientation);
         BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
-
         try {
             return mMultiFormatReader.decodeWithState(bitmap);
         } catch (NotFoundException e) {
@@ -112,6 +97,4 @@ class DecodeTask extends AsyncTask<byte[], Void, Result> {
             mDecoder.onDecodeFail();
         }
     }
-
-
 }
