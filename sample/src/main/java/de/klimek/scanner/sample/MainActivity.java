@@ -2,7 +2,6 @@ package de.klimek.scanner.sample;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.FragmentManager;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -24,7 +23,6 @@ public class MainActivity extends Activity implements OnDecodedCallback {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        FragmentManager fragmentManager = getFragmentManager();
         mScanner = (ScannerView) findViewById(R.id.scanner);
         mScanner.setOnDecodedCallback(this);
 
