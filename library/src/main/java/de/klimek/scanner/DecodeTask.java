@@ -18,9 +18,9 @@ class DecodeTask extends AsyncTask<byte[], Void, Result> {
     private Rect mBoundingRect;
     private MultiFormatReader mMultiFormatReader = new MultiFormatReader();
 
-    DecodeTask(Decoder decoder, Camera camera, int cameraDisplayOrientation, Rect boundingRect) {
+    DecodeTask(Decoder decoder, Camera.Size previewSize, int cameraDisplayOrientation, Rect boundingRect) {
         mDecoder = decoder;
-        mPreviewSize = camera.getParameters().getPreviewSize();
+        mPreviewSize = previewSize;
         mCameraDisplayOrientation = cameraDisplayOrientation;
         mBoundingRect = boundingRect;
     }

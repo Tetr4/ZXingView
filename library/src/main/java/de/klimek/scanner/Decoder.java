@@ -3,7 +3,6 @@ package de.klimek.scanner;
 import android.graphics.ImageFormat;
 import android.graphics.Rect;
 import android.hardware.Camera;
-import android.hardware.Camera.Parameters;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -14,6 +13,7 @@ class Decoder implements Camera.PreviewCallback {
     private static final String TAG = Decoder.class.getSimpleName();
 
     private Camera mCamera;
+    private Camera.Size mPreviewSize;
     private int mCameraDisplayOrientation;
     private byte[] mPreviewBuffer;
     private float mReticleFraction;
@@ -41,10 +41,11 @@ class Decoder implements Camera.PreviewCallback {
 
         mCamera = camera;
         mCameraDisplayOrientation = cameraDisplayOrientation;
-        mBoundingRect = getBoundingRect(camera, mReticleFraction);
+        mPreviewSize = camera.getParameters().getPreviewSize();
+        mBoundingRect = getBoundingRect(mPreviewSize, mReticleFraction);
 
         // add buffer to camera to prevent garbage collection spam
-        mPreviewBuffer = createPreviewBuffer(camera);
+        mPreviewBuffer = createPreviewBuffer(mPreviewSize);
         camera.addCallbackBuffer(mPreviewBuffer);
         camera.setPreviewCallbackWithBuffer(this);
     }
@@ -58,8 +59,7 @@ class Decoder implements Camera.PreviewCallback {
         }
     }
 
-    private Rect getBoundingRect(Camera camera, double fraction) {
-        Camera.Size previewSize = camera.getParameters().getPreviewSize();
+    private static Rect getBoundingRect(Camera.Size previewSize, double fraction) {
         int height = (int) (previewSize.height * fraction);
         int width = (int) (previewSize.width * fraction);
         int reticleDim = Math.min(height, width);
@@ -72,11 +72,10 @@ class Decoder implements Camera.PreviewCallback {
         return new Rect(left, top, right, bottom);
     }
 
-    private static byte[] createPreviewBuffer(Camera camera) {
-        Parameters params = camera.getParameters();
-        int width = params.getPreviewSize().width;
-        int height = params.getPreviewSize().height;
-        int bitsPerPixel = ImageFormat.getBitsPerPixel(params.getPreviewFormat());
+    private static byte[] createPreviewBuffer(Camera.Size mPreviewSize) {
+        int width = mPreviewSize.width;
+        int height = mPreviewSize.height;
+        int bitsPerPixel = ImageFormat.getBitsPerPixel(ImageFormat.NV21);  // default camera format
         int sizeInBits = width * height * bitsPerPixel;
         int sizeInBytes = (int) Math.ceil((float) sizeInBits / Byte.SIZE);
         return new byte[sizeInBytes];
@@ -92,7 +91,7 @@ class Decoder implements Camera.PreviewCallback {
     @Override
     public void onPreviewFrame(byte[] data, Camera camera) {
         if (mDecoding) {
-            mDecodeTask = new DecodeTask(this, camera, mCameraDisplayOrientation, mBoundingRect);
+            mDecodeTask = new DecodeTask(this, mPreviewSize, mCameraDisplayOrientation, mBoundingRect);
             mDecodeTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, data);
         }
     }
