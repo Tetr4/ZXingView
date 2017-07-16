@@ -21,7 +21,7 @@ class Decoder implements Camera.PreviewCallback {
 
     private volatile boolean mDecoding = false;
     private int mDecodeInterval;
-    private Timer mDelayTimer = new Timer();
+    private Timer mDelayTimer;
     private DecodeTask mDecodeTask;
     private OnDecodedCallback mCallback;
 
@@ -37,6 +37,7 @@ class Decoder implements Camera.PreviewCallback {
 
     void startDecoding(Camera camera, int cameraDisplayOrientation) {
         mDecoding = true;
+        mDelayTimer = new Timer();
 
         mCamera = camera;
         mCameraDisplayOrientation = cameraDisplayOrientation;
@@ -50,6 +51,8 @@ class Decoder implements Camera.PreviewCallback {
 
     void stopDecoding() {
         mDecoding = false;
+        mDelayTimer.cancel();
+        mDelayTimer = null;
         if (mDecodeTask != null) {
             mDecodeTask.cancel(true);
         }
