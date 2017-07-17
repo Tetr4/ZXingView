@@ -6,6 +6,8 @@ import android.hardware.Camera;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.google.zxing.MultiFormatReader;
+
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -16,6 +18,7 @@ class Decoder implements Camera.PreviewCallback {
     private Camera.Size mPreviewSize;
     private int mCameraDisplayOrientation;
     private byte[] mPreviewBuffer;
+    private byte[] mPreviewRotationBuffer;
     private float mReticleFraction;
     private Rect mBoundingRect;
 
@@ -23,6 +26,7 @@ class Decoder implements Camera.PreviewCallback {
     private int mDecodeInterval;
     private Timer mDelayTimer;
     private DecodeTask mDecodeTask;
+    private MultiFormatReader mMultiFormatReader = new MultiFormatReader();
     private OnDecodedCallback mCallback;
 
 
@@ -47,6 +51,8 @@ class Decoder implements Camera.PreviewCallback {
         // add buffer to camera to prevent garbage collection spam
         mPreviewBuffer = createPreviewBuffer(mPreviewSize);
         camera.addCallbackBuffer(mPreviewBuffer);
+        // temp buffer to allow manipulating/rotating the first buffer
+        mPreviewRotationBuffer = new byte[mPreviewBuffer.length];
         camera.setPreviewCallbackWithBuffer(this);
     }
 
@@ -91,7 +97,12 @@ class Decoder implements Camera.PreviewCallback {
     @Override
     public void onPreviewFrame(byte[] data, Camera camera) {
         if (mDecoding) {
-            mDecodeTask = new DecodeTask(this, mPreviewSize, mCameraDisplayOrientation, mBoundingRect);
+            mDecodeTask = new DecodeTask(this,
+                    mPreviewSize,
+                    mCameraDisplayOrientation,
+                    mBoundingRect,
+                    mMultiFormatReader,
+                    mPreviewRotationBuffer);
             mDecodeTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, data);
         }
     }

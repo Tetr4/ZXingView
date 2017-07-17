@@ -16,18 +16,21 @@ class DecodeTask extends AsyncTask<byte[], Void, Result> {
     private Camera.Size mPreviewSize;
     private int mCameraDisplayOrientation;
     private Rect mBoundingRect;
-    private MultiFormatReader mMultiFormatReader = new MultiFormatReader();
+    private MultiFormatReader mMultiFormatReader;
+    private final byte[] mRotationBuffer;
 
-    DecodeTask(Decoder decoder, Camera.Size previewSize, int cameraDisplayOrientation, Rect boundingRect) {
+    DecodeTask(Decoder decoder, Camera.Size previewSize, int cameraDisplayOrientation, Rect boundingRect, MultiFormatReader multiFormatReader, byte[] rotationBuffer) {
         mDecoder = decoder;
         mPreviewSize = previewSize;
         mCameraDisplayOrientation = cameraDisplayOrientation;
         mBoundingRect = boundingRect;
+        mMultiFormatReader = multiFormatReader;
+        mRotationBuffer = rotationBuffer;
     }
 
     @Override
     protected Result doInBackground(byte[]... datas) {
-        PlanarYUVLuminanceSource source = buildLuminanceSource(datas[0], mPreviewSize, mBoundingRect, mCameraDisplayOrientation);
+        PlanarYUVLuminanceSource source = buildLuminanceSource(datas[0]);
         BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
         try {
             return mMultiFormatReader.decodeWithState(bitmap);
@@ -47,21 +50,21 @@ class DecodeTask extends AsyncTask<byte[], Void, Result> {
         }
     }
 
-    private static PlanarYUVLuminanceSource buildLuminanceSource(byte[] data, Camera.Size previewSize, Rect boundingRect, int cameraDisplayOrientation) {
-        byte[] rotatedData = rotate(data, previewSize.width, previewSize.height, cameraDisplayOrientation);
-        boolean swap = (cameraDisplayOrientation == 90 || cameraDisplayOrientation == 270);
+    private PlanarYUVLuminanceSource buildLuminanceSource(byte[] data) {
+        byte[] rotatedData = rotate(data, mPreviewSize.width, mPreviewSize.height, mCameraDisplayOrientation);
+        boolean swap = (mCameraDisplayOrientation == 90 || mCameraDisplayOrientation == 270);
         return new PlanarYUVLuminanceSource(
                 rotatedData,
-                swap ? previewSize.height : previewSize.width,
-                swap ? previewSize.width : previewSize.height,
-                swap ? boundingRect.top : boundingRect.left,
-                swap ? boundingRect.left : boundingRect.top,
-                swap ? boundingRect.height() : boundingRect.width(),
-                swap ? boundingRect.width() : boundingRect.height(),
+                swap ? mPreviewSize.height : mPreviewSize.width,
+                swap ? mPreviewSize.width : mPreviewSize.height,
+                swap ? mBoundingRect.top : mBoundingRect.left,
+                swap ? mBoundingRect.left : mBoundingRect.top,
+                swap ? mBoundingRect.height() : mBoundingRect.width(),
+                swap ? mBoundingRect.width() : mBoundingRect.height(),
                 false);
     }
 
-    private static byte[] rotate(byte[] yuv, int width, int height, int rotation) {
+    private byte[] rotate(byte[] yuv, int width, int height, int rotation) {
         if (rotation == 0) {
             return yuv;
         }
@@ -71,7 +74,7 @@ class DecodeTask extends AsyncTask<byte[], Void, Result> {
         boolean flipY = (rotation == 180 || rotation == 270);
 
         // rotate image in NV21 encoding, which is the default for camera preview format
-        byte[] rotated = new byte[yuv.length];
+        // TODO rotate in place to save memory?
         int size = width * height;
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
@@ -90,11 +93,11 @@ class DecodeTask extends AsyncTask<byte[], Void, Result> {
                 int uOut = size + (yFlipped >> 1) * wSwapped + (xFlipped & ~1);
                 int vOut = uOut + 1;
 
-                rotated[yOut] = (byte) (0xff & yuv[yIn]);
-                rotated[uOut] = (byte) (0xff & yuv[uIn]);
-                rotated[vOut] = (byte) (0xff & yuv[vIn]);
+                mRotationBuffer[yOut] = (byte) (0xff & yuv[yIn]);
+                mRotationBuffer[uOut] = (byte) (0xff & yuv[uIn]);
+                mRotationBuffer[vOut] = (byte) (0xff & yuv[vIn]);
             }
         }
-        return rotated;
+        return mRotationBuffer;
     }
 }
