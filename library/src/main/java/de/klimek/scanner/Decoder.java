@@ -4,12 +4,10 @@ import android.graphics.ImageFormat;
 import android.graphics.Rect;
 import android.hardware.Camera;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.util.Log;
 
 import com.google.zxing.MultiFormatReader;
-
-import java.util.Timer;
-import java.util.TimerTask;
 
 class Decoder implements Camera.PreviewCallback {
     private static final String TAG = Decoder.class.getSimpleName();
@@ -24,8 +22,9 @@ class Decoder implements Camera.PreviewCallback {
 
     private volatile boolean mDecoding = false;
     private int mDecodeInterval;
-    private Timer mDelayTimer;
+    private Handler mDelayHandler = new Handler();
     private DecodeTask mDecodeTask;
+    private RequestPreviewFrameTask mRequestFrameTask;
     private MultiFormatReader mMultiFormatReader = new MultiFormatReader();
     private OnDecodedCallback mCallback;
 
@@ -41,7 +40,6 @@ class Decoder implements Camera.PreviewCallback {
 
     void startDecoding(Camera camera, int cameraDisplayOrientation) {
         mDecoding = true;
-        mDelayTimer = new Timer();
 
         mCamera = camera;
         mCameraDisplayOrientation = cameraDisplayOrientation;
@@ -50,16 +48,17 @@ class Decoder implements Camera.PreviewCallback {
 
         // add buffer to camera to prevent garbage collection spam
         mPreviewBuffer = createPreviewBuffer(mPreviewSize);
-        camera.addCallbackBuffer(mPreviewBuffer);
         // temp buffer to allow manipulating/rotating the first buffer
         mPreviewRotationBuffer = new byte[mPreviewBuffer.length];
         camera.setPreviewCallbackWithBuffer(this);
+        requestNextFrame(0);
     }
 
     void stopDecoding() {
         mDecoding = false;
-        mDelayTimer.cancel();
-        mDelayTimer = null;
+        if (mRequestFrameTask != null) {
+            mDelayHandler.removeCallbacks(mRequestFrameTask);
+        }
         if (mDecodeTask != null) {
             mDecodeTask.cancel(true);
         }
@@ -114,8 +113,7 @@ class Decoder implements Camera.PreviewCallback {
         Log.i(Decoder.TAG, "Decode success.");
         if (mDecoding) {
             mCallback.onDecoded(string);
-            // request next frame after delay
-            mDelayTimer.schedule(new RequestPreviewFrameTask(), mDecodeInterval);
+            requestNextFrame(mDecodeInterval);
         }
     }
 
@@ -125,12 +123,19 @@ class Decoder implements Camera.PreviewCallback {
     void onDecodeFail() {
         // Log.i(Decoder.TAG, "Decode fail.");
         if (mDecoding) {
-            // request next frame after delay
-            mDelayTimer.schedule(new RequestPreviewFrameTask(), mDecodeInterval);
+            requestNextFrame(mDecodeInterval);
         }
     }
 
-    private class RequestPreviewFrameTask extends TimerTask {
+    private void requestNextFrame(int delay) {
+        if (mRequestFrameTask != null) {
+            mDelayHandler.removeCallbacks(mRequestFrameTask);
+        }
+        mRequestFrameTask = new RequestPreviewFrameTask();
+        mDelayHandler.postDelayed(mRequestFrameTask, delay);
+    }
+
+    private class RequestPreviewFrameTask implements Runnable {
         @Override
         public void run() {
             if (mDecoding) {
