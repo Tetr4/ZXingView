@@ -11,7 +11,6 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Display;
 import android.view.Surface;
-import android.view.View;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 
@@ -206,8 +205,6 @@ public class ScannerView extends FrameLayout {
                 mCamera.setDisplayOrientation(displayOrientation);
                 mCameraPreview.startPreview(mCamera, displayOrientation);
                 mDecoder.startDecoding(mCamera, displayOrientation);
-                mCameraPreview.setVisibility(View.VISIBLE);
-                mReticle.setVisibility(View.VISIBLE);
             }
 
             @Override
@@ -230,8 +227,6 @@ public class ScannerView extends FrameLayout {
             mCamera.release();
             mCamera = null;
         }
-        mCameraPreview.setVisibility(View.INVISIBLE);
-        mReticle.setVisibility(View.INVISIBLE);
     }
 
     public void setOnDecodedCallback(OnDecodedCallback callback) {
