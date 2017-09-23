@@ -209,6 +209,14 @@ public class ScannerView extends FrameLayout {
                 mCameraPreview.setVisibility(View.VISIBLE);
                 mReticle.setVisibility(View.VISIBLE);
             }
+
+            @Override
+            protected void onCancelled() {
+                if (mCamera != null) {
+                    mCamera.release();
+                    mCamera = null;
+                }
+            }
         }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
