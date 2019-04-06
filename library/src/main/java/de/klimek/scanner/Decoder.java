@@ -61,6 +61,7 @@ class Decoder implements Camera.PreviewCallback {
         }
         if (mDecodeTask != null) {
             mDecodeTask.cancel(true);
+            mDecodeTask = null;
         }
     }
 

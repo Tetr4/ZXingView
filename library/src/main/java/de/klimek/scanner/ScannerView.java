@@ -1,5 +1,6 @@
 package de.klimek.scanner;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -175,6 +176,7 @@ public class ScannerView extends FrameLayout {
         }
     }
 
+    @SuppressLint("StaticFieldLeak") // task/reference is cleared in #stopScanning
     public final void startScanning() {
         // Task for smooth UI while camera loads
         mStartCameraTask = new AsyncTask<Void, Void, Exception>() {
@@ -219,6 +221,7 @@ public class ScannerView extends FrameLayout {
     public final void stopScanning() {
         if (mStartCameraTask != null) {
             mStartCameraTask.cancel(true);
+            mStartCameraTask = null;
         }
         if (mCamera != null) {
             mDecoder.stopDecoding();
