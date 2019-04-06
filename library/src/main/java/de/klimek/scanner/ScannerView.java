@@ -44,6 +44,7 @@ public class ScannerView extends FrameLayout {
     private AsyncTask<Void, Void, Exception> mStartCameraTask;
 
     private Decoder mDecoder;
+    private OnCameraErrorCallback mCameraErrorCallback;
 
     public ScannerView(Context context) {
         this(context, null);
@@ -196,7 +197,9 @@ public class ScannerView extends FrameLayout {
                 if (e != null) {
                     Log.w(TAG, "Exception while opening camera: " + e.getMessage());
                     mCamera = null;
-                    // TODO report error to callback?
+                    if (mCameraErrorCallback != null) {
+                        mCameraErrorCallback.onCameraError(e);
+                    }
                     return;
                 }
                 WindowManager windowManager = (WindowManager) getContext()
@@ -233,5 +236,9 @@ public class ScannerView extends FrameLayout {
 
     public void setOnDecodedCallback(OnDecodedCallback callback) {
         mDecoder.setOnDecodedCallback(callback);
+    }
+
+    public void setOnCameraErrorCallback(OnCameraErrorCallback callback) {
+        mCameraErrorCallback = callback;
     }
 }

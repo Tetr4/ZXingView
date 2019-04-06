@@ -9,11 +9,12 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.widget.Toast;
 
+import de.klimek.scanner.OnCameraErrorCallback;
 import de.klimek.scanner.OnDecodedCallback;
 import de.klimek.scanner.ScannerView;
 import de.klimek.zxingfragment.R;
 
-public class MainActivity extends Activity implements OnDecodedCallback {
+public class MainActivity extends Activity implements OnDecodedCallback, OnCameraErrorCallback {
     private static final int CAMERA_PERMISSION_REQUEST = 0xabc;
     private ScannerView mScanner;
     private boolean mPermissionGranted;
@@ -25,6 +26,7 @@ public class MainActivity extends Activity implements OnDecodedCallback {
 
         mScanner = findViewById(R.id.scanner);
         mScanner.setOnDecodedCallback(this);
+        mScanner.setOnCameraErrorCallback(this);
 
         // get permission
         int cameraPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
@@ -60,5 +62,10 @@ public class MainActivity extends Activity implements OnDecodedCallback {
     @Override
     public void onDecoded(String decodedData) {
         Toast.makeText(this, decodedData, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onCameraError(Exception error) {
+        Toast.makeText(this, error.getMessage(), Toast.LENGTH_LONG).show();
     }
 }
