@@ -36,7 +36,6 @@ public class ScannerView extends FrameLayout {
     private int mDecodeInterval = 500; // ms
 
     private CameraPreview mCameraPreview;
-    private Reticle mReticle;
 
     private Camera mCamera;
     private int mCameraId;
@@ -58,10 +57,10 @@ public class ScannerView extends FrameLayout {
         loadAttributes(attrs);
 
         inflate(getContext(), R.layout.scanner, this);
-        mCameraPreview = (CameraPreview) findViewById(R.id.camera_preview);
-        mReticle = (Reticle) findViewById(R.id.reticle);
-        mReticle.setSize(mReticleFraction);
-        mReticle.setColor(mReticleColor);
+        mCameraPreview = findViewById(R.id.camera_preview);
+        Reticle reticle = findViewById(R.id.reticle);
+        reticle.setSize(mReticleFraction);
+        reticle.setColor(mReticleColor);
 
         mCameraId = selectCamera(mAllowFrontCamera);
         Camera.getCameraInfo(mCameraId, mCameraInfo);

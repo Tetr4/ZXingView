@@ -23,7 +23,7 @@ public class MainActivity extends Activity implements OnDecodedCallback {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mScanner = (ScannerView) findViewById(R.id.scanner);
+        mScanner = findViewById(R.id.scanner);
         mScanner.setOnDecodedCallback(this);
 
         // get permission
