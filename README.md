@@ -1,4 +1,4 @@
-ZXing View for Android
+ZXing View for Android [![](https://jitpack.io/v/Tetr4/ZXingView.svg)](https://jitpack.io/#Tetr4/ZXingView)
 =============
 
 This repository contains code for an Android view that displays the camera's viewfinder and allows scanning barcodes via the [ZXing](https://github.com/zxing/zxing) image processing library.  
@@ -21,7 +21,7 @@ allprojects {
 
 ```gradle
 dependencies {
-    compile 'com.github.Tetr4:ZXingView:master-SNAPSHOT'
+    compile 'com.github.Tetr4:ZXingView:v1.1.0'
 }
 ```
 
