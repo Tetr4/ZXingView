@@ -55,21 +55,4 @@ scanner.startScanning();
 scanner.stopScanning();
 ```
 
-3. Add required permissions and features to `AndroidManifest.xml`:
-
-```xml
-<uses-permission android:name="android.permission.CAMERA"/>
-<uses-permission android:name="android.permission.FLASHLIGHT" />
-
-<uses-feature
-    android:name="android.hardware.camera.any"
-    android:required="true" />
-<uses-feature
-    android:name="android.hardware.camera.autofocus"
-    android:required="false" />
-<uses-feature
-    android:name="android.hardware.camera.flash"
-    android:required="false" />
-```
-
 Have a look at the [sample app](sample/src/main/java/de/klimek/scanner/sample/MainActivity.java) for a reference on how to handle runtime permissions for the camera.
