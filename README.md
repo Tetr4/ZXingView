@@ -21,7 +21,7 @@ allprojects {
 
 ```gradle
 dependencies {
-    implementation 'com.github.Tetr4:ZXingView:v1.0.0'
+    implementation 'com.github.Tetr4:ZXingView:v1.1.0'
 }
 ```
 
