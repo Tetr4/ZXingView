@@ -184,10 +184,10 @@ public class ScannerView extends FrameLayout {
             protected Exception doInBackground(Void... v) {
                 try {
                     mCamera = Camera.open(mCameraId);
+                    optimizeCameraParams(mCamera, mUseFlash);
                 } catch (RuntimeException e) {
                     return e;
                 }
-                optimizeCameraParams(mCamera, mUseFlash);
                 return null;
             }
 
